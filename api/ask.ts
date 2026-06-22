@@ -61,9 +61,24 @@ export default async function handler(
     const answer = await answerWithRag(trimmedQuestion);
     response.status(200).json({ answer });
   } catch (error) {
+    const details = error instanceof Error ? error.message : 'Unknown error';
+
+    if (
+      details.includes('RESOURCE_EXHAUSTED') ||
+      details.includes('UNAVAILABLE') ||
+      details.toLowerCase().includes('quota') ||
+      details.toLowerCase().includes('high demand')
+    ) {
+      response.status(200).json({
+        answer:
+          'The chat is temporarily unavailable because the AI model is rate-limited or under high demand. Please try again shortly.',
+      });
+      return;
+    }
+
     response.status(500).json({
       error: 'Failed to answer question',
-      details: error instanceof Error ? error.message : 'Unknown error',
+      details,
     });
   }
 }

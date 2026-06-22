@@ -54,7 +54,7 @@ export const embedText = async (text: string): Promise<number[]> => {
 export const generateAnswer = async (prompt: string): Promise<string> => {
   const models = [
     process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
-    process.env.GEMINI_FALLBACK_MODEL ?? 'gemini-2.0-flash',
+    process.env.GEMINI_FALLBACK_MODEL ?? 'gemini-2.5-flash-lite',
   ].filter((model, index, list) => model && list.indexOf(model) === index);
 
   let lastError = '';
