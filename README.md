@@ -25,6 +25,7 @@ and asks Gemini to answer using only that retrieved context.
 
 - `GEMINI_API_KEY`
 - `GEMINI_MODEL` optional, defaults to `gemini-2.5-flash`
+- `GEMINI_FALLBACK_MODEL` optional, defaults to `gemini-2.0-flash`
 - `GEMINI_EMBEDDING_MODEL` optional, defaults to `gemini-embedding-001`
 - `DATABASE_URL` Postgres connection string with pgvector support
 - `DATABASE_SSL` optional, defaults to `true`; set to `false` for local Postgres

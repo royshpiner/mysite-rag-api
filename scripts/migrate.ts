@@ -1,4 +1,4 @@
-import { getPool } from '../lib/db';
+import { getPool } from '../lib/db.js';
 
 const migrate = async () => {
   const pool = getPool();

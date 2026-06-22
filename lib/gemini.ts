@@ -1,4 +1,4 @@
-import { getRequiredEnv } from './env';
+import { getRequiredEnv } from './env.js';
 
 type GeminiEmbeddingResponse = {
   embedding?: {
@@ -52,28 +52,38 @@ export const embedText = async (text: string): Promise<number[]> => {
 };
 
 export const generateAnswer = async (prompt: string): Promise<string> => {
-  const model = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash';
-  const response = await fetch(geminiUrl(model, 'generateContent'), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [{ text: prompt }],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.2,
-      },
-    }),
-  });
+  const models = [
+    process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
+    process.env.GEMINI_FALLBACK_MODEL ?? 'gemini-2.0-flash',
+  ].filter((model, index, list) => model && list.indexOf(model) === index);
 
-  if (!response.ok) {
-    throw new Error(`Gemini generation request failed: ${await response.text()}`);
+  let lastError = '';
+
+  for (const model of models) {
+    const response = await fetch(geminiUrl(model, 'generateContent'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.2,
+        },
+      }),
+    });
+
+    if (response.ok) {
+      const data = (await response.json()) as GeminiGenerateResponse;
+      return data.candidates?.[0]?.content?.parts?.[0]?.text ?? 'I do not know.';
+    }
+
+    lastError = await response.text();
   }
 
-  const data = (await response.json()) as GeminiGenerateResponse;
-  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? 'I do not know.';
+  throw new Error(`Gemini generation request failed: ${lastError}`);
 };

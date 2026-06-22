@@ -1,5 +1,5 @@
-import { getPool, vectorLiteral } from './db';
-import { embedText, generateAnswer } from './gemini';
+import { getPool, vectorLiteral } from './db.js';
+import { embedText, generateAnswer } from './gemini.js';
 
 export type RetrievedChunk = {
   source: string;

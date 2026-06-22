@@ -2,9 +2,9 @@ import fs from 'node:fs/promises';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { PDFParse } from 'pdf-parse';
-import { getPool, vectorLiteral } from '../lib/db';
-import { embedText } from '../lib/gemini';
-import { chunkText } from '../lib/rag';
+import { getPool, vectorLiteral } from '../lib/db.js';
+import { embedText } from '../lib/gemini.js';
+import { chunkText } from '../lib/rag.js';
 
 type SourceDocument = {
   source: string;

@@ -57,7 +57,7 @@ export default async function handler(
       return;
     }
 
-    const { answerWithRag } = await import('../lib/rag');
+    const { answerWithRag } = await import('../lib/rag.js');
     const answer = await answerWithRag(trimmedQuestion);
     response.status(200).json({ answer });
   } catch (error) {
