@@ -1,17 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { answerWithRag } from '../lib/rag';
 
 type AskRequestBody = {
   question?: unknown;
-};
-
-type GeminiGenerateResponse = {
-  candidates?: Array<{
-    content?: {
-      parts?: Array<{
-        text?: string;
-      }>;
-    };
-  }>;
 };
 
 const allowedOrigin = process.env.ALLOWED_ORIGIN ?? '*';
@@ -53,14 +44,6 @@ export default async function handler(
     return;
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  const model = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash';
-
-  if (!apiKey) {
-    response.status(500).json({ error: 'GEMINI_API_KEY is not configured' });
-    return;
-  }
-
   try {
     const { question } = await readBody(request);
     const trimmedQuestion = String(question ?? '').trim();
@@ -75,43 +58,7 @@ export default async function handler(
       return;
     }
 
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: `Answer briefly. This is a temporary test endpoint before the RAG knowledge base is connected.\n\nUser question: ${trimmedQuestion}`,
-                },
-              ],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.2,
-          },
-        }),
-      }
-    );
-
-    if (!geminiResponse.ok) {
-      const errorText = await geminiResponse.text();
-      response.status(502).json({
-        error: 'Gemini request failed',
-        details: errorText,
-      });
-      return;
-    }
-
-    const data = (await geminiResponse.json()) as GeminiGenerateResponse;
-    const answer =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ?? 'I do not know.';
-
+    const answer = await answerWithRag(trimmedQuestion);
     response.status(200).json({ answer });
   } catch (error) {
     response.status(500).json({
