@@ -1,0 +1,16 @@
+{
+  "name": "mysite-rag-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "test": "node --check api/ask.js && node --check api/health.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "vercel": "^46.0.0"
+  }
+}

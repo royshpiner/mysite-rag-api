@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+
+node_modules/
+.vercel/
+
+.DS_Store
+npm-debug.log*
+
+# Local-only AI/project notes. Do not commit private planning or credentials.
+AGENTS.md
+.codex/
+local-context.md
