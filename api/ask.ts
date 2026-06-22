@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { answerWithRag } from '../lib/rag';
 
 type AskRequestBody = {
   question?: unknown;
@@ -58,6 +57,7 @@ export default async function handler(
       return;
     }
 
+    const { answerWithRag } = await import('../lib/rag');
     const answer = await answerWithRag(trimmedQuestion);
     response.status(200).json({ answer });
   } catch (error) {
