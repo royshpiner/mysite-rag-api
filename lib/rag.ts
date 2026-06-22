@@ -31,7 +31,8 @@ export const retrieveRelevantChunks = async (
   limit = MAX_CONTEXT_CHUNKS
 ): Promise<RetrievedChunk[]> => {
   const questionEmbedding = await embedText(question);
-  const result = await getPool().query<{
+  const pool = getPool();
+  const result = await pool.query<{
     source: string;
     source_id: string;
     chunk_index: number;
@@ -39,27 +40,74 @@ export const retrieveRelevantChunks = async (
     distance: string;
   }>(
     `
+      WITH ranked_chunks AS MATERIALIZED (
+        SELECT
+          source,
+          source_id,
+          chunk_index,
+          chunk_content,
+          embeddings_768 <=> $1::vector AS distance
+        FROM knowledge_base
+        WHERE embeddings_768 IS NOT NULL
+      )
       SELECT
         source,
         source_id,
         chunk_index,
         chunk_content,
-        embeddings_768 <=> $1::vector AS distance
-      FROM knowledge_base
-      WHERE embeddings_768 IS NOT NULL
-      ORDER BY embeddings_768 <=> $1::vector
+        distance
+      FROM ranked_chunks
+      ORDER BY distance
       LIMIT $2
     `,
     [vectorLiteral(questionEmbedding), limit]
   );
 
-  return result.rows.map((row) => ({
+  const chunks = result.rows.map((row) => ({
     source: row.source,
     sourceId: row.source_id,
     chunkIndex: row.chunk_index,
     content: row.chunk_content,
     distance: Number(row.distance),
   }));
+
+  if (!/\bprojects?\b/i.test(question)) {
+    return chunks;
+  }
+
+  const existingKeys = new Set(
+    chunks.map((chunk) => `${chunk.sourceId}:${chunk.chunkIndex}`)
+  );
+  const projectSummaries = await pool.query<{
+    source: string;
+    source_id: string;
+    chunk_index: number;
+    chunk_content: string;
+  }>(
+    `
+      SELECT source, source_id, chunk_index, chunk_content
+      FROM knowledge_base
+      WHERE source_id LIKE 'projects/%'
+        AND chunk_index = 0
+      ORDER BY source_id
+    `
+  );
+
+  for (const row of projectSummaries.rows) {
+    const key = `${row.source_id}:${row.chunk_index}`;
+
+    if (!existingKeys.has(key)) {
+      chunks.push({
+        source: row.source,
+        sourceId: row.source_id,
+        chunkIndex: row.chunk_index,
+        content: row.chunk_content,
+        distance: Number.POSITIVE_INFINITY,
+      });
+    }
+  }
+
+  return chunks.slice(0, limit);
 };
 
 export const answerWithRag = async (question: string): Promise<string> => {
