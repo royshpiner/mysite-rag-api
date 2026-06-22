@@ -24,5 +24,6 @@ deployment is working.
 ## Environment Variables
 
 - `GEMINI_API_KEY`
+- `GEMINI_MODEL` optional, defaults to `gemini-2.5-flash`
 - `DATABASE_URL` later, when the RAG database layer is added
 - `ALLOWED_ORIGIN` optional, for example `https://royshpiner.github.io`
