@@ -5,12 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vercel dev",
-    "test": "node --check api/ask.js && node --check api/health.js"
+    "test": "tsc --noEmit"
   },
   "engines": {
     "node": ">=20"
   },
   "devDependencies": {
+    "@types/node": "^24.0.4",
+    "@vercel/node": "^5.3.3",
+    "typescript": "^5.8.3",
     "vercel": "^46.0.0"
   }
 }
