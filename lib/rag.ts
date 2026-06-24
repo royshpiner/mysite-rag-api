@@ -11,6 +11,8 @@ export type RetrievedChunk = {
 
 const MAX_CONTEXT_CHUNKS = 5;
 
+const isProjectQuestion = (question: string) => /\bprojects?\b/i.test(question);
+
 export const chunkText = (text: string, wordsPerChunk = 400): string[] => {
   const words = text.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
   const chunks: string[] = [];
@@ -71,7 +73,7 @@ export const retrieveRelevantChunks = async (
     distance: Number(row.distance),
   }));
 
-  if (!/\bprojects?\b/i.test(question)) {
+  if (!isProjectQuestion(question)) {
     return chunks;
   }
 
@@ -125,12 +127,18 @@ export const answerWithRag = async (question: string): Promise<string> => {
         }\n${chunk.content}`
     )
     .join('\n\n');
+  const answerStyle = isProjectQuestion(question)
+    ? `For project questions, answer with a short intro and then one bullet per project. For each project, include:
+- what the project is
+- what Roy built or implemented
+- the main technologies or skills shown`
+    : 'Keep the answer concise and factual.';
 
   return generateAnswer(`
 You are Roy Shpiner's website assistant.
 Answer the user's question using only the context below.
 If the answer is not in the context, say you do not know.
-Keep the answer concise and factual.
+${answerStyle}
 
 Context:
 ${context}
